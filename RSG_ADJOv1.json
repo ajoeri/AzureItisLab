@@ -1,0 +1,213 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachines_Test_Adjo_adminPassword": {
+      "type": "SecureString"
+    },
+    "virtualMachines_Test_Adjo_name": {
+      "defaultValue": null,
+      "type": "String"
+    },
+    "networkInterfaces_test_adjo948_name": {
+      "defaultValue": null,
+      "type": "String"
+    },
+    "networkSecurityGroups_Test_Adjo_nsg_name": {
+      "defaultValue": null,
+      "type": "String"
+    },
+    "publicIPAddresses_Test_Adjo_ip_name": {
+      "defaultValue": null,
+      "type": "String"
+    },
+    "vaults_vault701_name": {
+      "defaultValue": null,
+      "type": "String"
+    },
+    "extensions_VMSnapshot_name": {
+      "defaultValue": null,
+      "type": "String"
+    },
+    "networkInterfaces_test_adjo948_id": {
+      "type": "String"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('virtualMachines_Test_Adjo_name')]",
+      "apiVersion": "2015-06-15",
+      "location": "westeurope",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_DS2"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftVisualStudio",
+            "offer": "Windows",
+            "sku": "Windows-10-N-x64",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[parameters('virtualMachines_Test_Adjo_name')]",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('https://rsglabitisdisks545.blob.core.windows.net/vhds/', parameters('virtualMachines_Test_Adjo_name'),'20161211233057.vhd')]"
+            },
+            "caching": "ReadWrite"
+          },
+          "dataDisks": []
+        },
+        "osProfile": {
+          "computerName": "[parameters('virtualMachines_Test_Adjo_name')]",
+          "adminUsername": "admin.lag",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": [],
+          "adminPassword": "[parameters('virtualMachines_Test_Adjo_adminPassword')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_test_adjo948_name'))]"
+            }
+          ]
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_test_adjo948_name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('networkInterfaces_test_adjo948_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAddress": "10.123.72.4",
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_Test_Adjo_ip_name'))]"
+              },
+              "subnet": {
+                "id": "[parameters('networkInterfaces_test_adjo948_id')]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": false,
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_Test_Adjo_nsg_name'))]"
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_Test_Adjo_ip_name'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_Test_Adjo_nsg_name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[parameters('networkSecurityGroups_Test_Adjo_nsg_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "default-allow-rdp",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "test",
+            "properties": {
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "*",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1010,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[parameters('publicIPAddresses_Test_Adjo_ip_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "idleTimeoutInMinutes": 4
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.RecoveryServices/vaults",
+      "sku": {
+        "name": "RS0",
+        "tier": "Standard"
+      },
+      "name": "[parameters('vaults_vault701_name')]",
+      "apiVersion": "2016-06-01",
+      "location": "westeurope",
+      "properties": {},
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[parameters('extensions_VMSnapshot_name')]",
+      "apiVersion": "2016-03-30",
+      "location": "westeurope",
+      "tags": { },
+      "properties": {
+        "publisher": "Microsoft.Azure.RecoveryServices",
+        "type": "VMSnapshot",
+        "typeHandlerVersion": "1.0",
+        "autoUpgradeMinorVersion": false,
+        "settings": {
+          "locale": "en-us",
+          "taskId": "d1de588d-c892-4a08-b3fc-979115beb005_1",
+          "commandToExecute": "Snapshot",
+          "objectStr": "eyJiYWNrdXBNZXRhZGF0YSI6W3siS2V5IjoiQ3VycmVudFRpY2tzIiwiVmFsdWUiOiI2MzYxNzI5OTMxMzAzODY2NTQifSx7IktleSI6IkJhY2tVcE9wZXJhdGlvbkpvYklkIiwiVmFsdWUiOiJlNzY1NmZjYS1lZGFmLTQ4ZDMtODI4Ny0xNGNiMmE2YTViNmMifSx7IktleSI6IkJhY2tVcE9wZXJhdGlvbkN1cnJlbnRJZCIsIlZhbHVlIjoiZDFkZTU4OGQtYzg5Mi00YTA4LWIzZmMtOTc5MTE1YmViMDA1In0seyJLZXkiOiJCYWNrVXBSZXRyeUNvdW50IiwiVmFsdWUiOiIwIn0seyJLZXkiOiJTbmFwU2hvdEZhaWx1cmVSZXRyeUNvdW50IiwiVmFsdWUiOiIwIn0seyJLZXkiOiJCYWNrVXBPd25lciIsIlZhbHVlIjoiSUFBU1ZtQmFja1VwIn1dfQ==",
+          "logsBlobUri": "https://wepod01coord1exsa4wq1d.blob.core.windows.net/bcdrextensionlogs-1287ace7-5064-4aaf-a576-639c4bdc8568/RSG_ADJOv1-Test-Adjo.v2.Logs.txt?sv=2014-02-14&sr=b&sig=dWbUEhbr41ULjuICRtrK1bbCBtsTmlOX%2FiqSopZPDV0%3D&st=2016-12-14T07%3A56%3A53Z&se=2016-12-14T11%3A01%3A53Z&sp=rw",
+          "statusBlobUri": "https://wepod01coord1exsa4wq1d.blob.core.windows.net/bcdrextensionlogs-1287ace7-5064-4aaf-a576-639c4bdc8568/RSG_ADJOv1-Test-Adjo.v2.Status.txt?sv=2014-02-14&sr=b&sig=XsB%2BY92uVXx0ysT1EIInr%2Fq5f3FAZwhWAHRNwe3so4M%3D&st=2016-12-14T07%3A56%3A53Z&se=2016-12-14T11%3A01%3A53Z&sp=rw",
+          "commandStartTimeUTCTicks": "636172993135699520",
+          "vmType": "microsoft.compute/virtualmachines"
+        }
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachines_Test_Adjo_name'))]"
+      ]
+    }
+  ]
+}
