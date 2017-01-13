@@ -65,7 +65,7 @@
     {
       "name": "[variables('NicName')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "location": "parameters('location')",
+      "location": "[parameters('location')]",
       "apiVersion": "2015-06-15",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
