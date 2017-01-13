@@ -1,0 +1,148 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachineName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "AdminUserName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "AdminPassword": {
+      "type": "string"
+    },
+    "WindowsOSVersion": {
+      "type": "string",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "Windows-Server-Technical-Preview",
+        "2016-Datacenter"
+      ]
+    },
+    "virtualNetworkName": {
+      "type": "string"
+    },
+    "CoreResourceGroup": {
+      "type": "string"
+    },
+    "subnetName": {
+      "type": "string"
+    },
+    "storageAccountName": {
+      "type": "string"
+    },
+    "diagnosticsStorageAccountName": {
+      "type": "string"
+    },
+    "VmSize": {
+      "type": "string"
+
+    }
+
+  },
+  "variables": {
+    "ImagePublisher": "MicrosoftWindowsServer",
+    "ImageOffer": "WindowsServer",
+    "OSDiskName": "OSDisk",
+    "VnetID": "[resourceId(parameters('CoreResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+    "SubnetRef": "[concat(variables('VnetID'), '/subnets/', parameters('subnetName'))]",
+    "StorageAccountContainerName": "vhds",
+    "NicName": "[concat(parameters('virtualMachineName'), 'NetworkInterface')]",
+    "publicIpAddressName": "[concat(parameters('virtualMachineName'), '-ip') ]",
+    "publicIpAddressType": "Dynamic",
+    "diagnosticsStorageAccountId": "[resourceId(parameters('CoreResourceGroup'), 'Microsoft.Storage/storageAccounts', parameters('diagnosticsStorageAccountName'))]",
+    "storageAccountId": "[resourceId(parameters('CoreResourceGroup'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+    "KeyVaultName": "VirtualMachineVault"
+
+  },
+  "resources": [
+    {
+      "name": "[variables('NicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "westeurope",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('SubnetRef')]"
+              },
+              "publicIpAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('publicIpAddressName')]",
+      "type": "Microsoft.Network/publicIpAddresses",
+      "apiVersion": "2016-09-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIpAllocationMethod": "[variables('publicIpAddressType')]"
+      }
+    },
+    {
+      "name": "[parameters('virtualMachineName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('NicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('VmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('virtualMachineName')]",
+          "adminUsername": "[parameters('AdminUsername')]",
+          "adminPassword": "[parameters('AdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('ImagePublisher')]",
+            "offer": "[variables('ImageOffer')]",
+            "sku": "[parameters('WindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "OSDisk",
+            "vhd": {
+              "uri": "[concat(concat(reference(resourceId(parameters('CoreResourceGroup'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').primaryEndpoints['blob'], 'vhds/'), parameters('virtualMachineName'), '20170112150211.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('NicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": false,
+            "storageUri": "[concat('https://', parameters('diagnosticsStorageAccountName'), '.blob.core.windows.net')]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+  }
+}
