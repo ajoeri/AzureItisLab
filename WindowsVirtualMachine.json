@@ -6,11 +6,11 @@
       "type": "string",
       "minLength": 1
     },
-    "AdminUserName": {
+    "LocalAdminUserName": {
       "type": "string",
       "minLength": 1
     },
-    "AdminPassword": {
+    "LocalAdminPassword": {
       "type": "string"
     },
     "WindowsOSVersion": {
@@ -40,7 +40,9 @@
     },
     "VmSize": {
       "type": "string"
-
+    },
+    "location": {
+      "type": "string"
     }
 
   },
@@ -63,7 +65,7 @@
     {
       "name": "[variables('NicName')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "location": "westeurope",
+      "location": "parameters('location')",
       "apiVersion": "2015-06-15",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
@@ -108,8 +110,8 @@
         },
         "osProfile": {
           "computerName": "[parameters('virtualMachineName')]",
-          "adminUsername": "[parameters('AdminUsername')]",
-          "adminPassword": "[parameters('AdminPassword')]"
+          "adminUsername": "[parameters('LocalAdminUsername')]",
+          "adminPassword": "[parameters('LocalAdminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
