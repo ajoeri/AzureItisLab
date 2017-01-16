@@ -149,7 +149,7 @@
       "name": "[concat(parameters('virtualMachineName'),'/BGInfo')]",
       "apiVersion": "2015-06-15",
       "dependsOn": [
-        "resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachineName'))"
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
       ],
       "location": "[resourceGroup().location]",
       "properties": {
