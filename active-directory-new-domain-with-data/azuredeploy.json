@@ -179,7 +179,7 @@
       "metadata": {
         "description": "The location of resources such as templates and DSC modules that the script is dependent"
       },
-      "defaultValue": "https://raw.githubusercontent.com/GoateePFE/AzureRM/master/active-directory-new-domain-with-data/"
+      "defaultValue": "https://raw.githubusercontent.com/ajoeri/AzureItisLab/master/active-directory-new-domain-with-data/"
     },
     "CoreResourceGroup": {
       "type": "string",
@@ -340,7 +340,7 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "[concat(parameters('adVMName'),'-DiskC')]",
+            "name": "OSDisk",
             "vhd": {
               "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/vhds/',parameters('adVMName'),'__DiskC.vhd')]"
             },
