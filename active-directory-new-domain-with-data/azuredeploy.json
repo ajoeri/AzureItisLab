@@ -353,8 +353,8 @@
                 "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/vhds/',parameters('adVMName'), '_DiskF-1.vhd')]"
               },
               "name": "[concat(parameters('adVMName'),'-DiskF')]",
-              "caching": "ReadWrite",
-              "createOption": "FromImage",
+              "caching": "None",
+              "createOption": "empty",
               "diskSizeGB": "[variables('adDataDiskSize')]",
               "lun": 0
             }
