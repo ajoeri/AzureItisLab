@@ -35,19 +35,6 @@
         "description": "The region to deploy the resources into"
       }
     },
-    "virtualNetworkName": {
-      "type": "string",
-      "metadata": {
-        "description": "The name of the Virtual Network to Create"
-      },
-      "defaultValue": "VNET_LAB_ITIS_01"
-    },
-    "adSubnetName": {
-      "type": "string",
-      "metadata": {
-        "description": "The name of the subnet"
-      }
-    },
     "adNicName": {
       "type": "string",
       "metadata": {
@@ -143,7 +130,7 @@
     },
     "imageSKU": {
       "type": "string",
-      "defaultValue": "2012-R2-Datacenter",
+      "defaultValue": "2016-Datacenter",
       "metadata": {
         "description": "Image SKU"
       }
@@ -181,19 +168,39 @@
       },
       "defaultValue": "https://raw.githubusercontent.com/ajoeri/AzureItisLab/master/active-directory-new-domain-with-data/"
     },
-    "CoreResourceGroup": {
+    "virtualNetworkName": {
       "type": "string",
       "metadata": {
-        "description": "The Core Resourcegroup"
+        "description": "The name of the Virtual Network to Create"
+      }
+    },
+    "virtualNetworkAddressRange": {
+      "type": "string",
+      "metadata": {
+        "description": "The address range of the new VNET in CIDR format"
       },
-      "defaultValue": "RSG_LAB_ITIS"
+      "defaultValue": "10.0.0.0/16"
+    },
+    "adSubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the subnet created in the new VNET"
+      },
+      "defaultValue": "adSubnet"
+    },
+    "adSubnet": {
+      "type": "string",
+      "metadata": {
+        "description": "The address range of the subnet created in the new VNET"
+      },
+      "defaultValue": "10.0.0.0/24"
     }
   },
   "variables": {
     "adLBFE": "LBFE",
     "adLBBE": "LBBE",
     "adRDPNAT": "adRDP",
-    "VnetID": "[resourceId(parameters('CoreResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+    "VnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
     "adSubnetRef": "[concat(variables('VnetID'),'/subnets/',parameters('adSubnetName'))]",
     "adNicId": "[resourceId('Microsoft.Network/networkInterfaces',parameters('adNicName'))]",
     "adIPConfigID": "[concat(variables('adNicId'),'/ipConfigurations/ipconfig1')]",
@@ -227,6 +234,35 @@
         "publicIPAllocationMethod": "[parameters('publicIPAddressType')]",
         "dnsSettings": {
           "domainNameLabel": "[parameters('addnsName')]"
+        }
+      }
+    },
+    {
+      "name": "VNet",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('vnetTemplateUri')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "virtualNetworkName": {
+            "value": "[parameters('virtualNetworkName')]"
+          },
+          "virtualNetworkAddressRange": {
+            "value": "[parameters('virtualNetworkAddressRange')]"
+          },
+          "subnetName": {
+            "value": "[parameters('adSubnetName')]"
+          },
+          "subnetRange": {
+            "value": "[parameters('adSubnet')]"
+          }
         }
       }
     },
@@ -281,6 +317,7 @@
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[parameters('location')]",
       "dependsOn": [
+        "Microsoft.Resources/deployments/VNet",
         "[concat('Microsoft.Network/loadBalancers/',variables('adlbName'))]"
       ],
       "apiVersion": "2015-06-15",
